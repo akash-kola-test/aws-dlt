@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'task-status-checker
+
+  Sample SAM Template for task-status-checker
+
+  '
+Resources:
+  TaskStatusChecker:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://dlt-testing-codes-akash/aws-dlt/1.0.1/2d087f67c117fcd56e2f770027613ff0
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+      - x86_64
+      Timeout: 15
+    Metadata:
+      SamResourceId: TaskStatusChecker

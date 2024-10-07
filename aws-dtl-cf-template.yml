@@ -71,13 +71,58 @@ Resources:
               awslogs-stream-prefix: ecs
       Cpu: '2048'
       Memory: '4096'
-      Family: !Join
-        - ''
-        - - !Ref AWS::StackName
-          - '-task-family'
+      Family: 
+        Fn::Sub: "${AWS::StackName}-task-family"
       RequiresCompatibilities:
         - FARGATE
       NetworkMode: awsvpc
       ExecutionRoleArn: !GetAtt ECSTaskRole.Arn
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
     DependsOn: ECSClusterDLT
+
+  TaskStatusCheckerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: TaskStatusCheckerPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecs:listTasks"
+                  - "ecs:describeTasks"
+                Resource: 
+                - !GetAtt ECSClusterDLT.Arn
+              - Effect: Allow
+                Action:
+                  - "logs:*"
+                Resource: 
+                  - !GetAtt ECSLogGroup.Arn
+                  - !Sub "${ECSLogGroup.Arn}:log-stream:*"
+
+  TaskStatusCheckerLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: dlt-testing-codes-akash
+        S3Key:
+          Fn::Sub:
+            - "${KeyPrefix}/task-status-checker.zip"
+            - KeyPrefix: aws-dlt/1.0.1
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role: !GetAtt TaskStatusCheckerRole.Arn
+      Timeout: 180
