@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/bin/sh
 
 UUID=$(cat /proc/sys/kernel/random/uuid)
 echo "S3_BUCKET:: ${S3_BUCKET}"
 echo "TEST_ID:: ${TEST_ID}"
 echo "PREFIX:: ${PREFIX}"
 echo "UUID:: ${UUID}"
-echo "AWS_REGION:: ${REGION}"
+echo "AWS_REGION:: ${AWS_REGION}"
 
 echo "Download test scenario"
 aws s3 cp s3://$S3_BUCKET/test-scenarios/$TEST_ID-$AWS_REGION.json test.json --region $AWS_REGION
@@ -15,6 +15,7 @@ OUT_FILE="jmeter.out"
 ERR_FILE="jmeter.err"
 KPI_EXT="jtl"
 EXT="jmx"
+TEST_TYPE="jmeter"
 
 echo "Downloading test file"
 aws s3 cp s3://$S3_BUCKET/public/test-scenarios/jmeter/$TEST_ID.$EXT ./ --region $AWS_REGION
