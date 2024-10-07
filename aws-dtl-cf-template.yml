@@ -7,11 +7,11 @@ Resources:
   ECSLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join 
-        - ''
-        - - !Ref AWS::StackName
-          - '-load-tester-logs'
-      RetentionInDays: 4
+      LogGroupName: 
+        Fn::Sub: "${AWS::StackName}-load-tester-logs"
+      RetentionInDays: 5
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
 
   ECSClusterDLT:
     Type: AWS::ECS::Cluster
@@ -21,10 +21,8 @@ Resources:
   ECSDLTBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Join 
-        - ''
-        - - !Ref AWS::StackName
-          - "dltbucket"
+      BucketName:
+        Fn::Sub: "${AWS::StackName}dltbucket"
 
   ECSTaskRole:
     Type: AWS::IAM::Role
@@ -40,7 +38,8 @@ Resources:
               - 'sts:AssumeRole'
       Path: /
       Policies:
-        - PolicyDocument:
+        - PolicyName: root
+          PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
@@ -55,17 +54,14 @@ Resources:
                 Resource: 
                   - !GetAtt ECSLogGroup.Arn
                   - !Sub "${ECSLogGroup.Arn}:log-stream:*"
-          PolicyName: root
 
   ECSClusterTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
         - Image: !FindInMap [ ECRDLTImage, ImageURI, Value ]
-          Name: !Join
-            - ''
-            - - !Ref AWS::StackName
-              - '-load-tester'
+          Name:
+            Fn::Sub: "${AWS::StackName}-load-tester"
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
