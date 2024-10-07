@@ -1,0 +1,87 @@
+Mappings:
+  ECRDLTImage: 
+    ImageURI: 
+      Value: public.ecr.aws/x2t0y6c0/aws-dlt/taurus-tester
+
+Resources:
+  ECSLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join 
+        - ''
+        - - !Ref AWS::StackName
+          - '-load-tester-logs'
+      RetentionInDays: 4
+
+  ECSClusterDLT:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: DLT-ECS-Cluster
+  
+  ECSDLTBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - ''
+        - - !Ref AWS::StackName
+          - "dltbucket"
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:*"
+                Resource: 
+                - !GetAtt ECSDLTBucket.Arn
+                - !Sub "${ECSDLTBucket.Arn}/*"
+              - Effect: Allow
+                Action:
+                  - "logs:*"
+                Resource: 
+                  - !GetAtt ECSLogGroup.Arn
+                  - !Sub "${ECSLogGroup.Arn}:log-stream:*"
+          PolicyName: root
+
+  ECSClusterTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: !FindInMap [ ECRDLTImage, ImageURI, Value ]
+          Name: !Join
+            - ''
+            - - !Ref AWS::StackName
+              - '-load-tester'
+          Essential: true
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref ECSLogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+      Cpu: '2048'
+      Memory: '4096'
+      Family: !Join
+        - ''
+        - - !Ref AWS::StackName
+          - '-task-family'
+      RequiresCompatibilities:
+        - FARGATE
+      NetworkMode: awsvpc
+      ExecutionRoleArn: !GetAtt ECSTaskRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+    DependsOn: ECSClusterDLT
