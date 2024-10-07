@@ -10,8 +10,8 @@ Resources:
       LogGroupName: 
         Fn::Sub: "${AWS::StackName}-load-tester-logs"
       RetentionInDays: 5
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
 
   ECSClusterDLT:
     Type: AWS::ECS::Cluster
@@ -80,6 +80,17 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
     DependsOn: ECSClusterDLT
 
+  TaskStatusCheckerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: 
+        Fn::Sub: 
+          - "/aws/lambda/${FunctionName}"
+          - FunctionName: !Ref TaskStatusCheckerLambdaFunction
+      RetentionInDays: 5
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+
   TaskStatusCheckerRole:
     Type: AWS::IAM::Role
     Properties:
@@ -102,16 +113,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ecs:listTasks"
-                  - "ecs:describeTasks"
-                Resource: 
-                - !GetAtt ECSClusterDLT.Arn
+                  - "ecs:ListTasks"
+                  - "ecs:DescribeTasks"
+                Resource: "*"
               - Effect: Allow
                 Action:
                   - "logs:*"
-                Resource: 
-                  - !GetAtt ECSLogGroup.Arn
-                  - !Sub "${ECSLogGroup.Arn}:log-stream:*"
+                Resource: "*" # use correct scope and try to remove circular dependency
 
   TaskStatusCheckerLambdaFunction:
     Type: AWS::Lambda::Function
