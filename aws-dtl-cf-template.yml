@@ -1,67 +1,69 @@
 Mappings:
-  ECRDLTImage: 
-    ImageURI: 
+  ECRDLTImage:
+    ImageURI:
       Value: public.ecr.aws/x2t0y6c0/aws-dlt/taurus-tester
 
 Resources:
   ECSLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: 
-        Fn::Sub: "${AWS::StackName}-load-tester-logs"
+      LogGroupName: !Sub ${AWS::StackName}-load-tester-logs
       RetentionInDays: 5
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
 
   ECSClusterDLT:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: DLT-ECS-Cluster
-  
+
   ECSDLTBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName:
-        Fn::Sub: "${AWS::StackName}dltbucket"
+      BucketName: !Sub ${AWS::StackName}-dltbucket
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
 
   ECSTaskRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service:
                 - ecs-tasks.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
+              - sts:AssumeRole
       Path: /
       Policies:
         - PolicyName: root
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - "s3:*"
-                Resource: 
-                - !GetAtt ECSDLTBucket.Arn
-                - !Sub "${ECSDLTBucket.Arn}/*"
+                  - s3:*
+                Resource:
+                  - !GetAtt ECSDLTBucket.Arn
+                  - !Sub ${ECSDLTBucket.Arn}/*
               - Effect: Allow
                 Action:
-                  - "logs:*"
-                Resource: 
+                  - logs:*
+                Resource:
                   - !GetAtt ECSLogGroup.Arn
-                  - !Sub "${ECSLogGroup.Arn}:log-stream:*"
+                  - !Sub ${ECSLogGroup.Arn}:log-stream:*
 
   ECSClusterTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
-        - Image: !FindInMap [ ECRDLTImage, ImageURI, Value ]
-          Name:
-            Fn::Sub: "${AWS::StackName}-load-tester"
+        - Image: !FindInMap
+            - ECRDLTImage
+            - ImageURI
+            - Value
+          Name: !Sub ${AWS::StackName}-load-tester
           Essential: true
           LogConfiguration:
             LogDriver: awslogs
@@ -71,8 +73,7 @@ Resources:
               awslogs-stream-prefix: ecs
       Cpu: '2048'
       Memory: '4096'
-      Family: 
-        Fn::Sub: "${AWS::StackName}-task-family"
+      Family: !Sub ${AWS::StackName}-task-family
       RequiresCompatibilities:
         - FARGATE
       NetworkMode: awsvpc
@@ -83,54 +84,105 @@ Resources:
   TaskStatusCheckerLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: 
-        Fn::Sub: 
-          - "/aws/lambda/${FunctionName}"
-          - FunctionName: !Ref TaskStatusCheckerLambdaFunction
+      LogGroupName: !Sub
+        - /aws/lambda/${FunctionName}
+        - FunctionName: !Ref TaskStatusCheckerLambdaFunction
       RetentionInDays: 5
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
 
   TaskStatusCheckerRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: "2012-10-17"
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
               Service:
                 - lambda.amazonaws.com
             Action:
-              - 'sts:AssumeRole'
+              - sts:AssumeRole
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
       Policies:
         - PolicyName: TaskStatusCheckerPolicy
           PolicyDocument:
-            Version: "2012-10-17"
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - "ecs:ListTasks"
-                  - "ecs:DescribeTasks"
-                Resource: "*"
+                  - ecs:ListTasks
+                  - ecs:DescribeTasks
+                Resource: '*'
               - Effect: Allow
                 Action:
-                  - "logs:*"
-                Resource: "*" # use correct scope and try to remove circular dependency
+                  - logs:*
+                Resource: '*' # use correct scope and try to remove circular dependency
 
   TaskStatusCheckerLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: dlt-testing-codes-akash
-        S3Key:
-          Fn::Sub:
-            - "${KeyPrefix}/task-status-checker.zip"
-            - KeyPrefix: aws-dlt/1.0.1
+        S3Bucket: dlt-codes-akash
+        S3Key: !Sub
+          - ${KeyPrefix}/task-status-checker.zip
+          - KeyPrefix: aws-dlt/1.0.0
       Handler: app.lambda_handler
       Runtime: python3.12
       Role: !GetAtt TaskStatusCheckerRole.Arn
+      Timeout: 180
+
+  TaskRunnerLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub
+        - /aws/lambda/${FunctionName}
+        - FunctionName: !Ref TaskRunnerLambdaFunction
+      RetentionInDays: 5
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  TaskRunnerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+      Policies:
+        - PolicyName: TaskStatusCheckerPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:ListTasks
+                  - ecs:DescribeTasks
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*' # use correct scope and try to remove circular dependency
+
+  TaskRunnerLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: dlt-codes-akash
+        S3Key: !Sub
+          - ${KeyPrefix}/task-runner.zip
+          - KeyPrefix: aws-dlt/1.0.0
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role: !GetAtt TaskRunnerRole.Arn
       Timeout: 180
