@@ -86,7 +86,7 @@ def lambda_handler(event, _):
         raise
 
     is_running = True
-    event["is_running"] = is_running
+    event["isRunning"] = is_running
 
     return event
 

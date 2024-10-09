@@ -1,0 +1,113 @@
+{
+    "StartAt": "Check Tasks for Given Test",
+    "States": {
+      "Check Tasks for Given Test": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${TaskStatusCheckerLambdaFunction}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "Are Tasks Running?"
+      },
+      "Are Tasks Running?": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.isRunning",
+            "BooleanEquals": true,
+            "Next": "Given test already running"
+          }
+        ],
+        "Default": "Run Tasks"
+      },
+      "Given test already running": {
+        "Type": "Fail"
+      },
+      "Run Tasks": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${TaskRunnerLambdaFunction}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "Wait for Test Completion"
+      },
+      "Wait for Test Completion": {
+        "Type": "Wait",
+        "SecondsPath": "$.duration",
+        "Next": "Check if tasks still running?"
+      },
+      "Check if tasks still running?": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::lambda:invoke",
+        "OutputPath": "$.Payload",
+        "Parameters": {
+          "Payload.$": "$",
+          "FunctionName": "${TaskStatusCheckerLambdaFunction}"
+        },
+        "Retry": [
+          {
+            "ErrorEquals": [
+              "Lambda.ServiceException",
+              "Lambda.AWSLambdaException",
+              "Lambda.SdkClientException",
+              "Lambda.TooManyRequestsException"
+            ],
+            "IntervalSeconds": 1,
+            "MaxAttempts": 3,
+            "BackoffRate": 2
+          }
+        ],
+        "Next": "Choice"
+      },
+      "Choice": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.isRunning",
+            "BooleanEquals": false,
+            "Next": "Success"
+          }
+        ],
+        "Default": "Wait for 1 More Minute"
+      },
+      "Success": {
+        "Type": "Succeed"
+      },
+      "Wait for 1 More Minute": {
+        "Type": "Wait",
+        "Seconds": 60,
+        "Next": "Check if tasks still running?"
+      }
+    },
+    "Comment": "Checks if the tasks are already running for the speicified test"
+  }

@@ -9,7 +9,7 @@ Resources:
   TaskStatusChecker:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/3b0bbdeba7b7a8af2052436b1ab7270b
+      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/7df83060c7fec2209a7e86289611a56d
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:

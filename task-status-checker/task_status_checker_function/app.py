@@ -21,7 +21,7 @@ def lambda_handler(event, _):
     
     if not tasksArns:
         logger.info("No tasks found for cluster: %s", cluster)
-        event["is_running"] = is_running
+        event["isRunning"] = is_running
         return event
 
     logger.info("Found task ARNs: %s", tasksArns)
@@ -37,7 +37,7 @@ def lambda_handler(event, _):
     else:
         logger.info("No running tasks found for test_id: %s", test_id)
 
-    event["is_running"] = is_running
+    event["isRunning"] = is_running
     logger.info("Returning event: %s", event)
     return event
 

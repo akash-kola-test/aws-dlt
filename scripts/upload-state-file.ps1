@@ -1,6 +1,5 @@
-$BucketName = "loadtesting-dltbucket"
-$TaurusFile = "123-us-east-1.json"
-$JmeterFile = "123.jmx"
+$BucketName = "dlt-codes-akash"
+$StateMachineFile = "taurus-test-task-handler.json"
 
 function Upload-FileToS3 {
     param (
@@ -19,8 +18,5 @@ function Upload-FileToS3 {
     }
 }
 
-$TaurusS3Path = "s3://$BucketName/test-scenarios/$TaurusFile"
-Upload-FileToS3 -filePath "./$TaurusFile" -s3Path $TaurusS3Path
-
-$JmeterS3Path = "s3://$BucketName/public/test-scenarios/jmeter/$JmeterFile"
-Upload-FileToS3 -filePath "./$JmeterFile" -s3Path $JmeterS3Path
+$StateMachineFileS3Path = "s3://$BucketName/state-machine-files/$StateMachineFile"
+Upload-FileToS3 -filePath "./state-machine/$StateMachineFile" -s3Path $StateMachineFileS3Path
