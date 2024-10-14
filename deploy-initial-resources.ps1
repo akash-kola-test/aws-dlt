@@ -51,7 +51,7 @@ Write-Log "Deployment of SAM Lambdas completed successfully." "Green"
 try {
     Write-Log "Uploading state machine file: $StateMachineFilePath"
 
-    Upload-FileToS3 -FilePath $StateMachineFilePath -S3Path $StateMachineFileS3Path
+    UploadFileToS3 -FilePath $StateMachineFilePath -S3Path $StateMachineFileS3Path
 
     Write-Log "State machine file uploaded successfully." "Green"
 } catch {
