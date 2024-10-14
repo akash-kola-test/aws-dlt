@@ -5,4 +5,5 @@ function UploadFileToS3 {
     )
     Write-Host "Starting upload of '$FilePath' to '$S3Path'..."
     aws s3 cp "$FilePath" "$S3Path" *> $null
+    Write-Host "Completed upload of '$FilePath' to '$S3Path'..."
 }
