@@ -11,7 +11,7 @@ try {
     UploadFileToS3 -FilePath "./sample-test-files/$TaurusFile" -S3Path $TaurusS3Path
     WriteLog "Successfully uploaded $TaurusFile to $TaurusS3Path."
 } catch {
-    WriteLog "Error uploading $TaurusFile to $TaurusS3Path. Error: $_"
+    WriteLog "Error uploading $TaurusFile to $TaurusS3Path. Error: $_" "ERROR"
 }
 
 $JmeterS3Path = "s3://$BucketName/public/test-scenarios/jmeter/$JmeterFile"
@@ -20,5 +20,5 @@ try {
     UploadFileToS3 -FilePath "./sample-test-files/$JmeterFile" -S3Path $JmeterS3Path
     WriteLog "Successfully uploaded $JmeterFile to $JmeterS3Path."
 } catch {
-    WriteLog "Error uploading $JmeterFile to $JmeterS3Path. Error: $_"
+    WriteLog "Error uploading $JmeterFile to $JmeterS3Path. Error: $_" "ERROR"
 }

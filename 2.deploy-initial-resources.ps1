@@ -30,13 +30,13 @@ foreach ($LambdaFolder in $LambdaFolders.Keys) {
             -OutputTemplateFile $OutputTemplateFile `
             -LambdaFunctionName $LambdaFolders[$LambdaFolder]
 
-        WriteLog "Successfully processed Lambda: $LambdaFolder" "Green"
+        WriteLog "Successfully processed Lambda: $LambdaFolder"
     } catch {
-        WriteLog "Error while processing Lambda folder: $LambdaFolder - $_" "ERROR" "Red"
+        WriteLog "Error while processing Lambda folder: $LambdaFolder - $_" "ERROR"
     }
 }
 
-WriteLog "Deployment of SAM Lambdas completed successfully." "Green"
+WriteLog "Deployment of SAM Lambdas completed successfully."
 
 try {
     WriteLog "Uploading state machine file: $StateMachineFilePath"
@@ -45,5 +45,5 @@ try {
 
     WriteLog "State machine file uploaded successfully." "Green"
 } catch {
-    WriteLog "Error while uploading state machine file: $_" "ERROR" "Red"
+    WriteLog "Error while uploading state machine file: $_" "ERROR"
 }
