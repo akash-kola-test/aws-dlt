@@ -124,7 +124,7 @@ def test_merge_region_infra_config_details(mock_boto3_client):
         "subnet": "subnet-123",
         "cluster": "cluster-abc",
         "task_definition": "task-def-xyz",
-        "task_container": "container-789",
+        "container_name": "container-789",
     }
 
 
@@ -179,7 +179,7 @@ def test_handle_tests_valid_post(mock_boto3_client, mock_start_state_machine_exe
                 "subnet": "subnet id",
                 "cluster": "cluster name",
                 "task_definition": "task definition",
-                "task_container": "task container",
+                "container_name": "task container",
             },
             "test_id": "123",
             "duration": 600,
@@ -263,7 +263,7 @@ def test_create_test_uploads_test_information_to_db(
         "subnet": "subnet id",
         "cluster": "cluster name",
         "task_definition": "task definition",
-        "task_container": "task container",
+        "container_name": "task container",
     }
 
     mock_upload_test_entry_to_db.assert_called_once_with(
