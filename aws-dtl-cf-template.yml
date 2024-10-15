@@ -137,6 +137,9 @@ Resources:
       Runtime: python3.12
       Role: !GetAtt TaskStatusCheckerRole.Arn
       Timeout: 180
+      Environment:
+        Variables:
+          TEST_AWS_REGION: !Sub ${AWS::Region}
 
   TaskRunnerLogGroup:
     Type: AWS::Logs::LogGroup
@@ -193,6 +196,10 @@ Resources:
       Runtime: python3.12
       Role: !GetAtt TaskRunnerRole.Arn
       Timeout: 180
+      Environment:
+        Variables:
+          TEST_AWS_REGION: !Sub ${AWS::Region}
+          SCENARIOS_BUCKET: !Ref ECSDLTBucket
 
   TaurusStateMachineLogGroup:
     Type: AWS::Logs::LogGroup
@@ -260,3 +267,99 @@ Resources:
               LogGroupArn: !GetAtt TaurusStateMachineLogGroup.Arn
         IncludeExecutionData: true
         Level: ALL
+
+  RegionInfraTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: region
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: region
+          AttributeType: S
+      TableName: RegionInfraTable
+      BillingMode: "PAY_PER_REQUEST"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  TestsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: test_id
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: test_id
+          AttributeType: S
+      TableName: TestsTable
+      BillingMode: "PAY_PER_REQUEST"
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+
+  ApiServicesFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                Resource:
+                  - !GetAtt RegionInfraTable.Arn
+                  - !GetAtt TestsTable.Arn
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !GetAtt ECSDLTBucket.Arn
+                  - !Sub ${ECSDLTBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - "states:*"
+                Resource: !GetAtt TaurusStateMachine.Arn
+          PolicyName: ApiServicesPolicy
+
+  ApiServicesLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: dlt-codes-akash
+        S3Key: !Sub
+          - ${KeyPrefix}/api-services.zip
+          - KeyPrefix: aws-dlt/1.0.0
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Role: !GetAtt ApiServicesFunctionRole.Arn
+      Timeout: 180
+      Environment:
+        Variables:
+          TEST_SCENARIOS_BUCKET: !Ref ECSDLTBucket
+          TAURUS_STATE_MACHINE_ARN: !GetAtt TaurusStateMachine.Arn
+          REGION_INFRA_TABLE: RegionInfraTable
+          TESTS_TABLE: TestsTable
+  
+  ApiServicesLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub
+        - /aws/lambda/${FunctionName}
+        - FunctionName: !Ref ApiServicesLambdaFunction
+      RetentionInDays: 5
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete

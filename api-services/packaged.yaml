@@ -1,19 +1,21 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: 'task-status-checker
+Description: 'api-services
 
-  Sample SAM Template for task-status-checker
+  Sample SAM Template for api-services
 
   '
+Globals:
+  Function:
+    Timeout: 120
 Resources:
-  TaskStatusChecker:
+  ApiServices:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/bb38cf3aacde391904179ab94bc05143
+      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/0bebf380f0b619f111040e2c36957e90
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
       - x86_64
-      Timeout: 15
     Metadata:
-      SamResourceId: TaskStatusChecker
+      SamResourceId: ApiServices

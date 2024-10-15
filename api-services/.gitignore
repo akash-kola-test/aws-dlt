@@ -1,7 +1,3 @@
-# example load test files
-123-us-east-1.json
-123.jmx
-
 
 # Created by https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode
 
@@ -220,12 +216,6 @@ venv.bak/
 !.vscode/extensions.json
 .history
 
-.vscode/
-
-events/
-.aws-sam/
-
-
 ### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
@@ -250,11 +240,5 @@ $RECYCLE.BIN/
 # Build folder
 
 */build/*
-
-env.json
-
-/sample-test-files/
-
-jmeter.log
 
 # End of https://www.gitignore.io/api/osx,linux,python,windows,pycharm,visualstudiocode

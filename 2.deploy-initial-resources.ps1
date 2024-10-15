@@ -12,6 +12,7 @@ $StateMachineFileS3Path = "s3://$BucketName/state-machine-files/taurus-test-task
 $LambdaFolders = @{
     "task-status-checker" = "TaskStatusChecker"
     "task-runner"         = "TaskRunnerFunction"
+    "api-services"        = "ApiServices"
 }
 
 WriteLog "Starting deployment of SAM Lambdas..."
@@ -43,7 +44,7 @@ try {
 
     UploadFileToS3 -FilePath $StateMachineFilePath -S3Path $StateMachineFileS3Path
 
-    WriteLog "State machine file uploaded successfully." "Green"
+    WriteLog "State machine file uploaded successfully."
 } catch {
     WriteLog "Error while uploading state machine file: $_" "ERROR"
 }

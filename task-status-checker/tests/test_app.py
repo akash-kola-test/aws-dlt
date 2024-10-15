@@ -1,3 +1,4 @@
+import os
 from task_status_checker_function.app import lambda_handler, list_tasks
 from unittest.mock import Mock, patch, call
 
@@ -59,6 +60,7 @@ def test_list_tasks_with_next_token(mock_boto_client):
 
 
 @patch("boto3.client")
+@patch.dict(os.environ, {"TEST_AWS_REGION": "us-east-1"})
 def test_lambda_handler(mock_boto_client):
     mock_ecs = mock_boto_client.return_value
 
@@ -72,13 +74,14 @@ def test_lambda_handler(mock_boto_client):
     }
     mock_ecs.describe_tasks.return_value = {"tasks": None}
 
-    event = {"region": "useast1", "cluster": "cluster"}
+    event = {"test_task_config": {"cluster": "some cluster"}}
     result = lambda_handler(event, {})
 
     assert result["isRunning"] is expected_is_running
 
 
 @patch("boto3.client")
+@patch.dict(os.environ, {"TEST_AWS_REGION": "us-east-1"})
 def test_lambda_handler_when_only_other_groups_running(mock_boto_client):
     expected_is_running = False
 
@@ -91,13 +94,14 @@ def test_lambda_handler_when_only_other_groups_running(mock_boto_client):
         ]
     }
 
-    event = {"region": "useast1", "cluster": "cluster", "test_id": "123"}
+    event = {"test_task_config": {"cluster": "some cluster"}, "test_id": "123"}
     result = lambda_handler(event, {})
 
     assert result["isRunning"] is expected_is_running
 
 
 @patch("boto3.client")
+@patch.dict(os.environ, {"TEST_AWS_REGION": "us-east-1"})
 def test_lambda_handler_when_test_group_running(mock_boto_client):
     expected_is_running = True
 
@@ -110,13 +114,14 @@ def test_lambda_handler_when_test_group_running(mock_boto_client):
         ]
     }
 
-    event = {"region": "useast1", "cluster": "cluster", "test_id": "123"}
+    event = {"test_task_config": {"cluster": "cluster"}, "test_id": "123"}
     result = lambda_handler(event, {})
 
     assert result["isRunning"] is expected_is_running
 
 
 @patch("boto3.client")
+@patch.dict(os.environ, {"TEST_AWS_REGION": "us-east-1"})
 def test_describe_not_calls_with_empty_task_arns(mock_boto_client):
     mock_ecs = mock_boto_client.return_value
     list_tasks_mock: Mock = Mock()
@@ -139,7 +144,7 @@ def test_describe_not_calls_with_empty_task_arns(mock_boto_client):
         },
     ]
 
-    event = {"region": "useast1", "cluster": "cluster", "test_id": "123"}
+    event = {"test_task_config": {"cluster": "cluster"}, "test_id": "123"}
     result = lambda_handler(event, {})
 
     assert result["isRunning"] is False

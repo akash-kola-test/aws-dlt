@@ -1,6 +1,7 @@
-import boto3
 import logging
 from typing import Any, Dict, Optional
+import os
+import boto3
 
 # Set up logging
 logger = logging.getLogger()
@@ -10,12 +11,13 @@ logger.setLevel(logging.INFO)
 def lambda_handler(event, _):
     logger.info("Received event: %s", event)
 
+    TEST_AWS_REGION = os.environ["TEST_AWS_REGION"]
+
     test_id = event.get("test_id")
-    region = event.get("region")
-    cluster = event.get("cluster")
+    cluster = event.get("test_task_config").get("cluster")
     is_running = False
 
-    ecs = boto3.client("ecs", region_name=region)
+    ecs = boto3.client("ecs", region_name=TEST_AWS_REGION)
 
     nextToken = None
 

@@ -9,7 +9,7 @@ Resources:
   TaskRunnerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/104254d9baf3aed0430d0731eddff349
+      CodeUri: s3://dlt-codes-akash/aws-dlt/1.0.0/8d25d6e6dd5b84d15d530819caa4a32a
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
